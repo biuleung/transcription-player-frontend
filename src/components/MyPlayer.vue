@@ -499,7 +499,7 @@ const playSelectedFile = function (f) {
     process.env.VUE_APP_MODE === "demonstration" ||
     !process.env.VUE_APP_MODE
   ) {
-    myVideo.src = new Audio("/demo/68sec.mov").src;
+    myVideo.src = new Audio("/transcription-player-frontend/demo/68sec.mov").src;
   } else {
     if (f) {
       try {
@@ -532,8 +532,7 @@ onMounted(() => {
     process.env.VUE_APP_MODE === "demonstration" ||
     !process.env.VUE_APP_MODE
   ) {
-    const file = new Audio("/demo/68sec.mov");
-    playSelectedFile(file);
+    playSelectedFile();
     getTranscription();
   }
   inputVT.value.addEventListener("change", function (e) {
