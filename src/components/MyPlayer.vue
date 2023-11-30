@@ -101,7 +101,10 @@
             @mousedown="onPlayBackward(movingDuration)"
           >
             <div>
-              <img :style="{ height: '2rem' }" src="svg/backward-svgrepo-com.svg" />
+              <img
+                :style="{ height: '2rem' }"
+                src="svg/backward-svgrepo-com.svg"
+              />
             </div>
           </div>
           <button
@@ -147,7 +150,10 @@
             :class="{ disabled: hasVideo == false, pointer: hasVideo == true }"
           >
             <div>
-              <img :style="{ height: '2rem' }" src="svg/forward-svgrepo-com.svg" />
+              <img
+                :style="{ height: '2rem' }"
+                src="svg/forward-svgrepo-com.svg"
+              />
             </div>
           </div>
         </div>
@@ -489,7 +495,10 @@ const playSelectedFile = function (f) {
   myResizable.value.appendChild(myVideo);
   hasVideo.value = true;
 
-  if (process.env.VUE_APP_MODE === "demonstration") {
+  if (
+    process.env.VUE_APP_MODE === "demonstration" ||
+    !process.env.VUE_APP_MODE
+  ) {
     myVideo.src = new Audio("/demo/68sec.mov").src;
   } else {
     if (f) {
@@ -519,7 +528,10 @@ const onLoopTimerUpdate = () => {
 };
 
 onMounted(() => {
-  if (process.env.VUE_APP_MODE === "demonstration") {
+  if (
+    process.env.VUE_APP_MODE === "demonstration" ||
+    !process.env.VUE_APP_MODE
+  ) {
     const file = new Audio("/demo/68sec.mov");
     playSelectedFile(file);
     getTranscription();

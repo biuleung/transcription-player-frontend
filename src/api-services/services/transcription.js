@@ -3,7 +3,7 @@ import req from '../https.js';
 
 // get audio's transcription
 export const apiGetTranscription = (body, params) => {
-    if (process.env.VUE_APP_MODE === 'demonstration') {
+    if (process.env.VUE_APP_MODE === 'demonstration' || !process.env.VUE_APP_MODE) {
         return axios.get('/demo/68sec.json')
     } else {
         return req('post', 'transcription/getTranscription', body, params)
