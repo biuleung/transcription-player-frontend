@@ -103,7 +103,7 @@
             <div>
               <img
                 :style="{ height: '2rem' }"
-                src="svg/backward-svgrepo-com.svg"
+                src="transcription-player-frontend/svg/backward-svgrepo-com.svg"
               />
             </div>
           </div>
@@ -152,7 +152,7 @@
             <div>
               <img
                 :style="{ height: '2rem' }"
-                src="svg/forward-svgrepo-com.svg"
+                src="transcription-player-frontend/svg/forward-svgrepo-com.svg"
               />
             </div>
           </div>
