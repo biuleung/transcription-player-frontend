@@ -37,7 +37,7 @@ yarn serve
 
 ## Demo Mode
 
-To demonstrate the app without calling the real Google Speech to Text API, you can use the demo mode. Set the `VUE_APP_MODE` environment variable in the `.env.local` file to any value. If you want to call the real Google Speech to Text API, change the `VUE_APP_MODE` variable to anything else and set up the backend server for calling the API.
+To demonstrate the app without calling the real `Google Speech to Text` API, you can use the demo mode. If you want to call the real `Google Speech to Text` API, change the `VUE_APP_MODE` variable to anything other than `demonstration` and set up the backend server for calling the API.
 
 ## Disclaimer
 The demo audio used in this application is sourced from [Before Breakfast Podcast](https://lauravanderkam.com/before-breakfast-podcast/), a part of one of their episode audio files.
