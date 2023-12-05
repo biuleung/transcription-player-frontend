@@ -103,7 +103,7 @@
             <div>
               <img
                 :style="{ height: '2rem' }"
-                src="transcription-player-frontend/svg/backward-svgrepo-com.svg"
+                :src="getImagPath('svg/backward-svgrepo-com.svg')"
               />
             </div>
           </div>
@@ -152,7 +152,7 @@
             <div>
               <img
                 :style="{ height: '2rem' }"
-                src="transcription-player-frontend/svg/forward-svgrepo-com.svg"
+                :src="getImagPath('svg/forward-svgrepo-com.svg')"
               />
             </div>
           </div>
@@ -219,7 +219,6 @@ import { ref, onMounted, watch } from "vue";
 import { apiGetTranscription } from "@/api-services/services/transcription";
 import DisplayedTranscription from "./DisplayedTranscription.vue";
 import { formattedTime, formattedTimeToSec } from "../utils/FormattedTime";
-import axios from "axios";
 
 let myVideo;
 let timeA, timeB;
@@ -286,8 +285,16 @@ const myGetCurrentTime = function () {
   return myVideo.currentTime;
 };
 
+function getImagPath(image) {
+  return require("@/assets/" + image);
+}
+
 function getDuration(file) {
   return new Promise((resolve, reject) => {
+    if (!file) {
+      console.log("rejct");
+      return resolve(false);
+    }
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
     reader.onloadend = (e) => {
@@ -313,7 +320,12 @@ async function uploadFile(event) {
     const formData = new FormData();
     const file = event?.target?.files[0];
     formData.append("file", file);
-    const duration = await getDuration(file);
+    let duration;
+    try {
+      duration = await getDuration(file);
+    } catch (error) {
+      console.log(error);
+    }
     if (duration > 360) {
       alert(
         "If you want to obtain the transcript, the audio duration should not exceed 6 minutes."
@@ -499,7 +511,9 @@ const playSelectedFile = function (f) {
     process.env.VUE_APP_MODE === "demonstration" ||
     !process.env.VUE_APP_MODE
   ) {
-    myVideo.src = new Audio("/transcription-player-frontend/demo/68sec.mov").src;
+    myVideo.src = new Audio(
+      "/transcription-player-frontend/demo/free_112sec.mov"
+    ).src;
   } else {
     if (f) {
       try {
