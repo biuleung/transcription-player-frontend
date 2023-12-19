@@ -5,7 +5,15 @@ module.exports = defineConfig({
   transpileDependencies: true,
   publicPath: '/transcription-player-frontend/',
   configureWebpack: {
-    devtool: 'source-map'
+    devtool: 'source-map',
+    resolve: {
+      fallback: {
+        timers: require.resolve('timers-browserify'),
+        https: require.resolve("https-browserify"),
+        http: require.resolve("stream-http"),
+        stream: require.resolve("stream-browserify")
+      },
+    },
   },
 
   chainWebpack: (config) => {

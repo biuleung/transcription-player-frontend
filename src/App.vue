@@ -1,18 +1,10 @@
 <template>
-  <MyMain />
-  <MyPlayer />
+  <router-view></router-view>
 </template>
 
 <script>
-import MyPlayer from "./components/MyPlayer.vue";
-import MyMain from "./components/MyMain.vue";
-
 export default {
   name: "App",
-  components: {
-    MyMain,
-    MyPlayer,
-  },
   setup() {},
 };
 </script>
@@ -24,7 +16,7 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 25px;
+  /* margin-top: 25px; */
   padding: 0 15px;
 }
 
@@ -41,6 +33,9 @@ export default {
   background-color: red !important;
 }
 .color-gray {
-  color: gray;
+  color: gray !important;
+}
+.color-white {
+  color: white !important;
 }
 </style>

@@ -7,17 +7,20 @@
       }"
       class="justify-content-start"
     >
-      <!-- <p class="d-flex p-0 m-0">audio cannot exceed 6 minutes</p> -->
-      <div class="input-group custom-file-button">
+      <div
+        v-show="panelVisible.isVisible"
+        class="input-group custom-file-button"
+      >
         <v-file-input
           ref="inputVT"
-          accept="video/*,audio/*"
           label="only mp3, mov accepted (audio cannot exceed 6 minutes)"
           @change="uploadFile"
+          v-model="audioFile"
         ></v-file-input>
       </div>
     </div>
     <div
+      v-show="panelVisible.isVisible"
       ref="myResizable"
       :style="{ background: '#ddd', minHeight: '64px', minWidth: '100%' }"
       class="pt-1"
@@ -35,7 +38,7 @@
       >
         <span class="sr-only"></span>
       </div>
-      <div>
+      <div v-show="panelVisible.isVisible">
         <DisplayedTranscription
           :scripts="scripts"
           :selectedId="selectedDurationId"
@@ -47,18 +50,23 @@
     </div>
     <div class="form-floating my-2">
       <textarea
+        v-model="typingScript.script"
         :style="{
-          fontSize: '22px',
+          fontSize: '18px',
           height: '5.5rem',
         }"
         class="form-control"
-        placeholder="Leave a comment here"
         id="floatingTextarea"
       ></textarea>
       <label for="floatingTextarea">Type here</label>
     </div>
     <!-- takes one of the players -->
-    <div id="timeInputs" ref="timeInputs" style="margin: 3px 0px 0px 0px">
+    <div
+      v-show="panelVisible.isVisible"
+      id="timeInputs"
+      ref="timeInputs"
+      style="margin: 3px 0px 0px 0px"
+    >
       <div
         :style="{
           margin: '3px 0px 0px 0px',
@@ -162,6 +170,7 @@
     </div>
 
     <div
+      v-show="panelVisible.isVisible"
       id="bottom"
       :disabled="hasVideo == false"
       :style="{
@@ -215,10 +224,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { toRaw, ref, onMounted, watch, reactive } from "vue";
 import { apiGetTranscription } from "@/api-services/services/transcription";
 import DisplayedTranscription from "./DisplayedTranscription.vue";
 import { formattedTime, formattedTimeToSec } from "../utils/FormattedTime";
+import { usePanelVisibleStore } from "@/stores/panel-visible";
+import { useCurrentUserIdStore } from "@/stores/current-user-id";
+import { useTranscriptStore } from "@/stores/transcript";
+import * as customLocalStorage from "../utils/LocalStorage";
 
 let myVideo;
 let timeA, timeB;
@@ -227,6 +240,7 @@ let isTimeBSet = false;
 const loopTimer = [];
 const loopMeas = [];
 
+const audioFile = ref(null);
 const inputVT = ref(null);
 const myResizable = ref(null);
 const timeInputs = ref(null);
@@ -235,13 +249,22 @@ const timeARef = ref(null);
 const timeBRef = ref(null);
 const playbackRate = ref(1);
 const movingDuration = ref(2);
-const scripts = ref({ id: null, totalTime: null, results: [] });
+// origin scripts from api
+const scripts = ref({ totalTime: null, results: [] });
+// current textarea typing
+const typingScript = reactive({ id: null, script: null });
+// scripts for each duration time
+const typedScripts = new Map();
 const selectedDurationId = ref(null);
 const isLoadingTranscription = ref(false);
 
 const startedLoopTime = ref();
 const endedLoopTime = ref();
 const hasVideo = ref(false);
+
+const panelVisible = usePanelVisibleStore();
+const currentUserId = useCurrentUserIdStore();
+const transcript = useTranscriptStore();
 
 let myPlay;
 
@@ -257,6 +280,9 @@ const initSettings = () => {
   loopButton.value.innerHTML = "A";
   scripts.value = { id: null, totalTime: null, results: [] };
   selectedDurationId.value = null;
+  typingScript.id = null;
+  typingScript.script = null;
+  typedScripts.clear();
 };
 
 const init = () => {
@@ -319,7 +345,19 @@ async function uploadFile(event) {
   if (event?.target?.files) {
     const formData = new FormData();
     const file = event?.target?.files[0];
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      var str = this.result;
+      customLocalStorage.setItem(
+        "audioFile",
+        JSON.stringify({ base64String: str })
+      );
+    };
+    reader.readAsDataURL(file);
+
     formData.append("file", file);
+    formData.append("userId", currentUserId.id);
     let duration;
     try {
       duration = await getDuration(file);
@@ -349,18 +387,7 @@ function getTranscription(formData) {
     })
       .then((res) => {
         const { data } = res;
-        scripts.value = {
-          totalTime: data.totalTime,
-          results: data.results?.map((res) => ({
-            id:
-              formattedTime(res.words[0].startTime.seconds) +
-              formattedTime(res.endTime.seconds),
-            transcript: res.transcript,
-            startTime: formattedTime(res.words[0].startTime.seconds),
-            endTime: formattedTime(res.endTime.seconds),
-            visible: false,
-          })),
-        };
+        setScripts(data);
         isLoadingTranscription.value = false;
         selectedDurationId.value = null;
       })
@@ -375,7 +402,30 @@ function getTranscription(formData) {
   }
 }
 
+const setScripts = (data) => {
+  scripts.value.totalTime = data.totalTime;
+  if (Array.isArray(data.results)) {
+    data.results.forEach((item) => {
+      const id =
+        formattedTime(item.words[0].startTime.seconds) +
+        formattedTime(item.endTime.seconds);
+      if (!scripts.value.results.find((res) => res.id === id)) {
+        scripts.value.results.push({
+          id: id,
+          transcript: item.transcript,
+          startTime: formattedTime(item.words[0].startTime.seconds),
+          endTime: formattedTime(item.endTime.seconds),
+          visible: false,
+        });
+      }
+    });
+  }
+};
+
 const onDurationClick = (id, startTime, endTime) => {
+  typingScript.id = id;
+  typingScript.script = typedScripts.get(id);
+
   cancelABLoop();
   timeA = formattedTimeToSec(startTime) - 0.2;
   timeB = formattedTimeToSec(endTime) + 0.6; //0.6: add some buffer time
@@ -550,25 +600,46 @@ onMounted(() => {
     getTranscription();
   }
   inputVT.value.addEventListener("change", function (e) {
+    inputVT.value.innerText = "abc";
+
     myBlur();
     playSelectedFile(e.target.files[0]);
     scripts.value = { id: null, totalTime: null, results: [] };
   });
   addEventListener("keydown", (event) => {
     if (myVideo) {
-      switch (event.code) {
-        case "ArrowRight":
-          onPlayForward(movingDuration.value);
-          break;
-        case "ArrowLeft":
-          onPlayBackward(movingDuration.value);
-          break;
-        default:
-          break;
+      if (event.metaKey && event.code === "ArrowRight") {
+        onPlayForward(movingDuration.value);
       }
 
-      // shift + space
-      if (event.shiftKey && event.code === "Space") {
+      if (event.metaKey && event.code === "ArrowLeft") {
+        onPlayBackward(movingDuration.value);
+      }
+
+      if (event.metaKey && event.code === "KeyF") {
+        // changeSpeed()
+        console.log(playbackRate.value);
+        switch (playbackRate.value) {
+          case 1:
+            changeSpeed(0.75);
+            break;
+          case 0.75:
+            changeSpeed(0.5);
+            break;
+          case 0.5:
+            changeSpeed(1);
+            break;
+          default:
+            break;
+        }
+      }
+
+      // shift + command + space for macos
+      // shift + ctrl + space for windows
+      if (
+        (event.shiftKey && event.metaKey && event.code === "Space") ||
+        (event.shiftKey && event.ctrlKey && event.code === "Space")
+      ) {
         if (myVideo.paused) {
           myVideo.play();
         } else if (myVideo.played) {
@@ -580,10 +651,33 @@ onMounted(() => {
       if (event.shiftKey && event.code === "KeyB") {
         onLoopDown();
       }
+
+      //
+      if (event.shiftKey && event.metaKey && event.code === "KeyE") {
+        panelVisible.toggle();
+      }
     }
   });
 
-  watch(isLoadingTranscription, (current) => {});
+  watch(typingScript, (script) => {
+    typedScripts.set(script.id, script.script);
+  });
+
+  transcript.$subscribe((_mutation, state) => {
+    const rawState = toRaw(state);
+
+    const url = JSON.parse(
+      customLocalStorage.getItem("audioFile")
+    ).base64String;
+    fetch(url)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const file = new File([blob], rawState.scripts.fileOriginName);
+        audioFile.value = [file];
+        playSelectedFile(file);
+        setScripts(rawState.scripts);
+      });
+  });
 });
 </script>
 
