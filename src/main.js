@@ -30,10 +30,12 @@ const routes = [
   { path: '/login-callback/', component: LoginCallback },
   { path: '/signup-not-allowed-callback/', component: SignupNotAllowed }
 ]
+
 const router = VueRouter.createRouter({
-  history: VueRouter.createWebHistory(),
+  history: process.env.NODE_ENV === "production" ? VueRouter.createWebHashHistory('/transcription-player-frontend/') : VueRouter.createWebHistory(),
   routes,
 });
+
 const pinia = createPinia()
 
 createApp(App)
