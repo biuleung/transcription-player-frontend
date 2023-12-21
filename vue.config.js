@@ -3,7 +3,7 @@ const path = require('path')
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  publicPath: '/transcription-player-frontend/',
+  // publicPath: '/transcription-player-frontend/',
   configureWebpack: {
     devtool: 'source-map',
     resolve: {
