@@ -32,7 +32,7 @@ const routes = [
 ]
 
 const router = VueRouter.createRouter({
-  history: process.env.NODE_ENV === "production" ? VueRouter.createWebHashHistory('/transcription-player-frontend/') : VueRouter.createWebHistory(),
+  history: process.env.VUE_APP_MODE === "demonstration" ? VueRouter.createWebHashHistory('/transcription-player-frontend/') : VueRouter.createWebHistory(),
   routes,
 });
 

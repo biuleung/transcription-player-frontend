@@ -561,9 +561,10 @@ const playSelectedFile = function (f) {
     process.env.VUE_APP_MODE === "demonstration" ||
     !process.env.VUE_APP_MODE
   ) {
-    myVideo.src = new Audio(
+    const file = new Audio(
       "/transcription-player-frontend/demo/free_112sec.mov"
     ).src;
+    myVideo.src = file;
   } else {
     if (f) {
       try {
